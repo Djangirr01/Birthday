@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday - Hyper Realistic 3D Cake Celebration 🎉</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- OrbitControls for interactive 3D rotation -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Outfit:wght@300;400;600;800&family=Great+Vibes&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: radial-gradient(circle at 50% 15%, #2a0835 0%, #12031a 50%, #05010a 100%);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .cursive-font { font-family: 'Great Vibes', cursive; }
+        .fun-font { font-family: 'Fredoka', sans-serif; }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Smooth Page Transition Mechanics */
+        .page-screen {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            min-height: 100vh;
+            transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.96) translateY(20px);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            overflow-y: auto;
+            padding-bottom: 2rem;
+        }
+
+        .page-screen.active-screen {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1) translateY(0);
+            position: relative;
+        }
+
+        /* 3D Realistic Heart Balloons */
+        .realistic-heart-balloon {
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            filter: drop-shadow(0 25px 25px rgba(0, 0, 0, 0.6));
+        }
+
+        .realistic-heart-balloon:hover {
+            transform: scale(1.12) translateY(-12px);
+        }
+
+        @keyframes float-b1 { 0%,100% { transform: translateY(0px) rotate(-4deg); } 50% { transform: translateY(-28px) rotate(4deg); } }
+        @keyframes float-b2 { 0%,100% { transform: translateY(0px) rotate(3deg); } 50% { transform: translateY(-35px) rotate(-5deg); } }
+        @keyframes float-b3 { 0%,100% { transform: translateY(0px) rotate(-3deg); } 50% { transform: translateY(-24px) rotate(6deg); } }
+
+        .anim-b1 { animation: float-b1 4.2s ease-in-out infinite; }
+        .anim-b2 { animation: float-b2 5.0s ease-in-out infinite 0.5s; }
+        .anim-b3 { animation: float-b3 4.6s ease-in-out infinite 1.0s; }
+
+        @keyframes balloonPopEffect {
+            0% { transform: scale(1); opacity: 1; filter: brightness(1); }
+            40% { transform: scale(1.4); opacity: 0.9; filter: brightness(1.8); }
+            100% { transform: scale(0); opacity: 0; }
+        }
+        .popping { animation: balloonPopEffect 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important; }
+
+        /* Polaroid Photo Frame */
+        .polaroid-frame {
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 35px rgba(236,72,153,0.35);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .polaroid-frame:hover {
+            transform: rotate(0deg) scale(1.03);
+        }
+
+        /* 3D WebGL Canvas Container */
+        #cakeCanvasContainer {
+            width: 100%;
+            height: 380px;
+            position: relative;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            cursor: grab;
+        }
+        #cakeCanvasContainer:active {
+            cursor: grabbing;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0c0214; }
+        ::-webkit-scrollbar-thumb { background: #ec4899; border-radius: 3px; }
+    </style>
+</head>
+<body class="relative min-h-screen flex flex-col justify-between items-center selection:bg-pink-500 selection:text-white">
+
+    <!-- Background Starfield Canvas -->
+    <canvas id="bgCanvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+
+    <!-- Header Navigation Bar -->
+    <header class="w-full max-w-6xl mx-auto px-4 py-4 flex justify-between items-center z-30 relative">
+        <div class="flex items-center space-x-2 cursor-pointer" onclick="navigateToPage(1)">
+            <span class="text-3xl animate-bounce">🎈</span>
+            <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-400 to-amber-200 fun-font">Babes ka Birthday</span>
+        </div>
+
+        <!-- Step Indicator -->
+        <div class="hidden sm:flex items-center space-x-2 glass-card px-4 py-1.5 rounded-full text-xs font-semibold">
+            <span id="step1Indicator" class="text-pink-400 font-bold flex items-center gap-1 cursor-pointer" onclick="navigateToPage(1)">
+                <i class="fas fa-dot-circle text-pink-400"></i> Page 1: Heart Wishes
+            </span>
+            <span class="text-white/30">/</span>
+            <span id="step2Indicator" class="text-white/40 flex items-center gap-1 cursor-pointer" onclick="navigateToPage(2)">
+                <i class="far fa-circle"></i> Page 2: Photo Memory
+            </span>
+            <span class="text-white/30">/</span>
+            <span id="step3Indicator" class="text-white/40 flex items-center gap-1 cursor-pointer" onclick="navigateToPage(3)">
+                <i class="far fa-circle"></i> Page 3: 3D Cake
+            </span>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <button id="musicToggleBtn" onclick="toggleAudio()" class="glass-card hover:bg-white/20 transition-all px-4 py-2 rounded-full text-white flex items-center space-x-2 shadow-lg group">
+                <i id="musicIcon" class="fas fa-music text-pink-400 group-hover:scale-110 transition-transform"></i>
+                <span class="text-xs font-semibold">Music: <span id="musicStateText">OFF</span></span>
+            </button>
+
+           
+        </div>
+    </header>
+
+    <!-- ================= PAGE 1: 3D SVG HEART BALLOONS ================= -->
+    <section id="page1" class="page-screen active-screen z-10 pt-4">
+        <div class="w-full max-w-5xl mx-auto px-4 flex flex-col items-center my-auto">
+            
+            <div class="text-center mb-6 space-y-2">
+                <span class="inline-block px-4 py-1.5 rounded-full glass-card text-pink-300 text-xs sm:text-sm font-semibold uppercase tracking-widest animate-pulse border border-pink-500/30">
+                    Be happy, Be Loved, Be Magical ✨
+                </span>
+                <h1 class="text-4xl sm:text-6xl font-extrabold text-white tracking-tight">
+                    Happy Birthday <span id="displayName" class="bg-clip-text text-transparent bg-gradient-to-r from-pink-400 via-purple-300 to-amber-200 cursive-font text-5xl sm:text-7xl">Lakshita</span> 💖
+                </h1>
+                <p class="text-slate-300 text-sm sm:text-base font-light max-w-md mx-auto">
+                    Click each floating heart balloon (<span id="poppedCount" class="font-bold text-pink-400">0</span>/3 popped) to unlock special wishes!
+                </p>
+            </div>
+
+            <!-- 3 REALISTIC 3D SVG HEART BALLOONS -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 w-full max-w-4xl my-4 justify-items-center items-end pb-8">
+                
+                <!-- BALLOON 1 -->
+                <div id="balloon1Container" class="anim-b1 flex flex-col items-center group select-none" onclick="popBalloon(1)">
+                    <div class="realistic-heart-balloon">
+                        <svg class="w-44 h-48 sm:w-52 sm:h-56 overflow-visible" viewBox="0 0 140 150">
+                            <defs>
+                                <radialGradient id="rubyGrad" cx="38%" cy="30%" r="65%" fx="30%" fy="25%">
+                                    <stop offset="0%" stop-color="#ff8da1" />
+                                    <stop offset="25%" stop-color="#ff3b63" />
+                                    <stop offset="70%" stop-color="#dc143c" />
+                                    <stop offset="100%" stop-color="#7a0010" />
+                                </radialGradient>
+                                <radialGradient id="rubyHighlight" cx="30%" cy="22%" r="22%">
+                                    <stop offset="0%" stop-color="rgba(255, 255, 255, 0.95)" />
+                                    <stop offset="60%" stop-color="rgba(255, 255, 255, 0.3)" />
+                                    <stop offset="100%" stop-color="rgba(255, 255, 255, 0)" />
+                                </radialGradient>
+                                <filter id="dropShadowRuby" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feDropShadow dx="0" dy="16" stdDeviation="12" flood-color="#880808" flood-opacity="0.6"/>
+                                </filter>
+                            </defs>
+                            <path d="M 70,38 A 30,30 0 0,0 15,38 C 15,68 70,115 70,125 C 70,115 125,68 125,38 A 30,30 0 0,0 70,38 Z" fill="url(#rubyGrad)" filter="url(#dropShadowRuby)" />
+                            <ellipse cx="45" cy="45" rx="14" ry="8" transform="rotate(-30 45 45)" fill="url(#rubyHighlight)" />
+                            <polygon points="66,123 74,123 70,132" fill="#880808" />
+                            <path d="M 70,132 Q 50,165 80,200 T 60,260" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2.5" />
+                        </svg>
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-extrabold text-lg fun-font tracking-wider drop-shadow-md pointer-events-none">
+                            Wish 1 🎁
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BALLOON 2 -->
+                <div id="balloon2Container" class="anim-b2 flex flex-col items-center group select-none" onclick="popBalloon(2)">
+                    <div class="realistic-heart-balloon">
+                        <svg class="w-44 h-48 sm:w-52 sm:h-56 overflow-visible" viewBox="0 0 140 150">
+                            <defs>
+                                <radialGradient id="pinkGrad" cx="38%" cy="30%" r="65%" fx="30%" fy="25%">
+                                    <stop offset="0%" stop-color="#ffb6c1" />
+                                    <stop offset="25%" stop-color="#ff69b4" />
+                                    <stop offset="70%" stop-color="#ff1493" />
+                                    <stop offset="100%" stop-color="#70005d" />
+                                </radialGradient>
+                                <radialGradient id="pinkHighlight" cx="30%" cy="22%" r="22%">
+                                    <stop offset="0%" stop-color="rgba(255, 255, 255, 0.95)" />
+                                    <stop offset="60%" stop-color="rgba(255, 255, 255, 0.3)" />
+                                    <stop offset="100%" stop-color="rgba(255, 255, 255, 0)" />
+                                </radialGradient>
+                                <filter id="dropShadowPink" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feDropShadow dx="0" dy="16" stdDeviation="12" flood-color="#ff1493" flood-opacity="0.6"/>
+                                </filter>
+                            </defs>
+                            <path d="M 70,38 A 30,30 0 0,0 15,38 C 15,68 70,115 70,125 C 70,115 125,68 125,38 A 30,30 0 0,0 70,38 Z" fill="url(#pinkGrad)" filter="url(#dropShadowPink)" />
+                            <ellipse cx="45" cy="45" rx="14" ry="8" transform="rotate(-30 45 45)" fill="url(#pinkHighlight)" />
+                            <polygon points="66,123 74,123 70,132" fill="#a1006a" />
+                            <path d="M 70,132 Q 90,165 60,200 T 80,260" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2.5" />
+                        </svg>
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-extrabold text-lg fun-font tracking-wider drop-shadow-md pointer-events-none">
+                            Wish 2 ✨
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BALLOON 3 -->
+                <div id="balloon3Container" class="anim-b3 flex flex-col items-center group select-none" onclick="popBalloon(3)">
+                    <div class="realistic-heart-balloon">
+                        <svg class="w-44 h-48 sm:w-52 sm:h-56 overflow-visible" viewBox="0 0 140 150">
+                            <defs>
+                                <radialGradient id="purpleGrad" cx="38%" cy="30%" r="65%" fx="30%" fy="25%">
+                                    <stop offset="0%" stop-color="#e879f9" />
+                                    <stop offset="25%" stop-color="#c084fc" />
+                                    <stop offset="70%" stop-color="#9333ea" />
+                                    <stop offset="100%" stop-color="#3b0764" />
+                                </radialGradient>
+                                <radialGradient id="purpleHighlight" cx="30%" cy="22%" r="22%">
+                                    <stop offset="0%" stop-color="rgba(255, 255, 255, 0.95)" />
+                                    <stop offset="60%" stop-color="rgba(255, 255, 255, 0.3)" />
+                                    <stop offset="100%" stop-color="rgba(255, 255, 255, 0)" />
+                                </radialGradient>
+                                <filter id="dropShadowPurple" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feDropShadow dx="0" dy="16" stdDeviation="12" flood-color="#9333ea" flood-opacity="0.6"/>
+                                </filter>
+                            </defs>
+                            <path d="M 70,38 A 30,30 0 0,0 15,38 C 15,68 70,115 70,125 C 70,115 125,68 125,38 A 30,30 0 0,0 70,38 Z" fill="url(#purpleGrad)" filter="url(#dropShadowPurple)" />
+                            <ellipse cx="45" cy="45" rx="14" ry="8" transform="rotate(-30 45 45)" fill="url(#purpleHighlight)" />
+                            <polygon points="66,123 74,123 70,132" fill="#581c87" />
+                            <path d="M 70,132 Q 50,170 75,210 T 55,260" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2.5" />
+                        </svg>
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-extrabold text-lg fun-font tracking-wider drop-shadow-md pointer-events-none">
+                            Wish 3 💖
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Page 1 Redirect Button -->
+            <div class="mt-4">
+                <button onclick="navigateToPage(2)" class="px-8 py-4 bg-gradient-to-r from-pink-500 via-purple-600 to-amber-500 hover:from-pink-600 hover:to-amber-600 text-white font-extrabold text-lg rounded-full shadow-[0_0_30px_rgba(236,72,153,0.7)] transition-all transform hover:scale-105 active:scale-95 flex items-center space-x-3 border-2 border-white/40">
+                    <span>Next: Photo Memory 💖</span>
+                    <i class="fas fa-arrow-right text-amber-200 animate-pulse"></i>
+                </button>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ================= PAGE 2: PHOTO MEMORY FRAME ================= -->
+    <section id="page2" class="page-screen z-10 pt-4">
+        <div class="w-full max-w-4xl mx-auto px-4 flex flex-col items-center my-auto">
+            
+            <div class="text-center mb-6 space-y-2">
+                <span class="inline-block px-4 py-1.5 rounded-full glass-card text-purple-300 text-xs sm:text-sm font-semibold uppercase tracking-widest border border-purple-500/30">
+                    you are the star of the day! ✨
+                </span>
+                <h2 class="text-3xl sm:text-5xl font-black text-white fun-font">
+                    Captured <span class="cursive-font text-pink-400 text-4xl sm:text-6xl">Moments</span> 📸
+                </h2>
+                <p class="text-slate-300 text-sm sm:text-base font-light max-w-md mx-auto">
+                    A special glimpse dedicated to the star of the day!
+                </p>
+            </div>
+
+            <!-- Glowing Polaroid Photo Display featuring 24507_2.jpg -->
+            <div class="polaroid-frame p-4 pb-8 rounded-2xl max-w-sm sm:max-w-md w-full my-4 text-slate-800 rotate-[-2deg] relative">
+                <div class="overflow-hidden rounded-xl bg-slate-900 aspect-[3/4] relative shadow-inner">
+                    <img id="page2Photo" src="Lakshu.jpeg" alt="Birthday Girl Photo" onerror="this.src='Lakshu.jpg'" class="w-full h-full object-cover transition-transform duration-700 hover:scale-105" />
+                    
+                    <div class="absolute top-3 right-3 bg-pink-500/80 backdrop-blur-md text-white text-xs px-3 py-1 rounded-full font-bold flex items-center gap-1 shadow-md">
+                        <i class="fas fa-heart text-amber-300"></i> Birthday Queen
+                    </div>
+                </div>
+
+                <div class="mt-4 text-center">
+                    <p id="polaroidQuote" class="cursive-font text-3xl sm:text-4xl text-pink-600 font-bold">
+                        "Stay as bright and wonderful as you are!"
+                    </p>
+                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-widest block mt-1">
+                        ✨ Celebrated Today & Always ✨
+                    </span>
+                </div>
+
+                <span class="absolute -top-4 -right-4 text-3xl animate-bounce">💖</span>
+                <span class="absolute -bottom-4 -left-4 text-3xl animate-pulse">🌸</span>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="flex flex-wrap justify-center items-center gap-4 mt-6">
+                <button onclick="navigateToPage(1)" class="px-6 py-3 glass-card hover:bg-white/20 text-white rounded-full font-semibold text-sm transition-transform active:scale-95 flex items-center gap-2 border border-white/20">
+                    <i class="fas fa-arrow-left"></i> Back to Balloons
+                </button>
+
+                <button onclick="toggleAudio()" class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-full font-bold text-sm shadow-lg transition-transform active:scale-95 flex items-center gap-2">
+                    <i class="fas fa-music"></i> Play Music 🎵
+                </button>
+
+                <button onclick="navigateToPage(3)" class="px-8 py-3 bg-gradient-to-r from-amber-400 via-pink-500 to-purple-600 text-white font-extrabold text-sm rounded-full shadow-[0_0_25px_rgba(236,72,153,0.6)] transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2 border border-white/30">
+                    <span>Next:Cake Celebration 🎂</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ================= PAGE 3: HYPER-REALISTIC 3D THREE.JS CAKE ================= -->
+    <section id="page3" class="page-screen z-10 pt-4">
+        <div class="w-full max-w-4xl mx-auto px-4 flex flex-col items-center my-auto">
+            
+            <div class="text-center mb-2 space-y-1">
+                <span class="inline-block px-4 py-1.5 rounded-full glass-card text-amber-300 text-xs sm:text-sm font-semibold uppercase tracking-widest border border-amber-500/30">
+                    Make a Wish! 12/10/2026 12:00 AM ✨
+                </span>
+                <h2 class="text-3xl sm:text-5xl font-extrabold text-white fun-font">
+                    Blow the <span class="text-pink-400 cursive-font text-4xl sm:text-6xl">Candles!</span> 🎂
+                </h2>
+                <p class="text-slate-300 text-xs sm:text-sm font-light">
+                    Drag to rotate 3D cake in 360° | Click "Blow Out Candles" to extinguish!
+                </p>
+            </div>
+
+            <!-- THREE.JS 3D CANVAS CONTAINER -->
+            <div class="glass-card rounded-3xl p-3 sm:p-5 w-full max-w-xl my-2 flex flex-col items-center relative border border-white/20 shadow-2xl">
+                
+                <div id="cakeCanvasContainer" class="w-full"></div>
+
+                <!-- Secret Wish Message revealed upon blowing candles -->
+                <div id="secretMessage" class="hidden mt-3 p-3 bg-white/10 rounded-2xl border border-pink-400/40 text-center animate-fadeIn w-full">
+                    <p class="text-pink-300 font-bold text-sm mb-1">🎉 Wish Granted! 🎉</p>
+                    <p class="text-slate-200 text-xs sm:text-sm font-light leading-relaxed">
+                        May your life be as sweet as this 3D chocolate strawberry cake and filled with boundless joy!
+                    </p>
+                </div>
+
+                <!-- Ceremony Controls -->
+                <div class="mt-4 flex flex-wrap gap-2.5 justify-center">
+                    <button onclick="blowOut3DCandles()" class="px-5 py-2.5 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white rounded-xl text-xs font-bold border border-pink-400/40 transition-all flex items-center gap-1.5 shadow-lg active:scale-95">
+                        <i class="fas fa-wind"></i> Blow Out Candles 🌬️
+                    </button>
+                    <button onclick="relight3DCandles()" class="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold border border-purple-400/40 transition-all flex items-center gap-1.5 shadow-lg active:scale-95">
+                        <i class="fas fa-fire"></i> Relight Candles 🕯️
+                    </button>
+                    <button onclick="triggerConfettiBurst()" class="px-5 py-2.5 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white rounded-xl text-xs font-bold border border-amber-400/40 transition-all flex items-center gap-1.5 shadow-lg active:scale-95">
+                        <i class="fas fa-gifts"></i> Confetti Blast! 🎉
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Page 3 Navigation -->
+            <div class="flex flex-wrap gap-4 justify-center mt-2">
+                <button onclick="navigateToPage(2)" class="px-6 py-3 glass-card hover:bg-white/20 text-white rounded-full font-semibold text-sm transition-transform active:scale-95 flex items-center gap-2 border border-white/20">
+                    <i class="fas fa-arrow-left"></i> Back to Memory
+                </button>
+                <button onclick="navigateToPage(1)" class="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white rounded-full font-bold text-sm shadow-lg transition-transform active:scale-95 flex items-center gap-2">
+                    <i class="fas fa-redo"></i> Restart Experience
+                </button>
+            </div>
+
+        </div>
+    </section>
+
+    <footer class="w-full text-center py-3 text-xs text-slate-400 z-30 relative">
+        Designed with ❤️ for unforgettable Birthday Celebrations ✨
+    </footer>
+
+    <!-- Wish Pop-up Modal -->
+    <div id="wishModal" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+        <div class="glass-card max-w-md w-full rounded-3xl p-6 sm:p-8 text-center relative border border-white/20 transform scale-90 transition-transform duration-300 shadow-2xl">
+            <div id="modalIconBg" class="w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-4 shadow-lg text-white">
+                💖
+            </div>
+            
+            <h3 id="modalWishTitle" class="text-2xl font-bold text-white mb-2 fun-font">Special Wish</h3>
+            <p id="modalWishText" class="text-slate-200 text-base leading-relaxed mb-6 font-light">
+                Wishing you endless sweet smiles and magical moments!
+            </p>
+
+            <button onclick="closeModal('wishModal')" class="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold rounded-2xl transition-all shadow-lg">
+                Close Wish 💕
+            </button>
+        </div>
+    </div>
+
+    <!-- Personalize Modal -->
+    <div id="customModal" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+        <div class="glass-card max-w-md w-full rounded-3xl p-6 sm:p-8 relative border border-white/20 transform scale-90 transition-transform duration-300 shadow-2xl">
+            <button onclick="closeModal('customModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <h3 class="text-xl font-bold text-white mb-4 fun-font flex items-center gap-2">
+                <i class="fas fa-sliders text-pink-400"></i> Personalize Wishes
+            </h3>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Birthday Name:</label>
+                    <input type="text" id="inputName" placeholder="Enter name" class="w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-pink-400 text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Photo Quote / Message:</label>
+                    <textarea id="inputQuote" rows="2" placeholder="Write a heartwarming quote..." class="w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-pink-400 text-sm"></textarea>
+                </div>
+
+                <button onclick="saveCustomizations()" class="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold rounded-2xl transition-all shadow-lg mt-2">
+                    Save Changes ✨
+                </button>
+            </div>
+        </div>
+    </div >
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 glass-card px-5 py-3 rounded-2xl text-white text-sm font-semibold shadow-2xl flex items-center space-x-2 translate-y-20 opacity-0 transition-all duration-300 pointer-events-none z-50">
+        <i class="fas fa-check-circle text-green-400"></i>
+        <span id="toastMsg">Action performed!</span>
+    </div>
+
+    <script>
+        let poppedBalloons = new Set();
+        let isAudioPlaying = false;
+        let audioCtx = null;
+        let musicInterval = null;
+        let currentPage = 1;
+
+        // Three.js variables
+        let scene, camera, renderer, controls;
+        let candleFlames = [];
+        let candleSmokes = [];
+        let is3DInit = false;
+        let candlesLit = true;
+
+        const wishes = {
+            1: {
+                title: "Wish #1: Joy & Sunshine 🌟",
+                text: "May your coming year be filled with bright smiles, good health, and joyful moments every single day!",
+                colorBg: "bg-red-500",
+                icon: "❤️"
+            },
+            2: {
+                title: "Wish #2: Dreams Come True 🚀",
+                text: "May all your wishes, career ambitions, and wild dreams turn into beautiful reality. Keep shining bright!",
+                colorBg: "bg-pink-500",
+                icon: "✨"
+            },
+            3: {
+                title: "Wish #3: Everlasting Love 💖",
+                text: "Sending you endless love, tight hugs, and peace. May your heart always feel warmth and happiness!",
+                colorBg: "bg-purple-500",
+                icon: "🎁"
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initStarfield();
+        });
+
+        function initStarfield() {
+            const canvas = document.getElementById('bgCanvas');
+            const ctx = canvas.getContext('2d');
+            let stars = [];
+
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            for (let i = 0; i < 80; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 2 + 0.5,
+                    alpha: Math.random(),
+                    speed: Math.random() * 0.02 + 0.005
+                });
+            }
+
+            function drawStars() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                stars.forEach(star => {
+                    star.alpha += star.speed;
+                    if (star.alpha > 1 || star.alpha < 0) star.speed = -star.speed;
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${Math.abs(star.alpha)})`;
+                    ctx.fill();
+                });
+                requestAnimationFrame(drawStars);
+            }
+            drawStars();
+        }
+
+        function navigateToPage(pageNum) {
+            if (pageNum === currentPage) return;
+
+            document.querySelectorAll('.page-screen').forEach(el => {
+                el.classList.remove('active-screen');
+            });
+
+            const targetPage = document.getElementById(`page${pageNum}`);
+            if (targetPage) {
+                targetPage.classList.add('active-screen');
+                currentPage = pageNum;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                for (let i = 1; i <= 3; i++) {
+                    const ind = document.getElementById(`step${i}Indicator`);
+                    if (ind) {
+                        if (i === pageNum) {
+                            ind.className = "text-pink-400 font-bold flex items-center gap-1 cursor-pointer";
+                            ind.innerHTML = `<i class="fas fa-dot-circle text-pink-400"></i> Page ${i}: ${i===1?'Heart Wishes':i===2?'Photo Memory':'3D Cake'}`;
+                        } else {
+                            ind.className = "text-white/40 flex items-center gap-1 cursor-pointer";
+                            ind.innerHTML = `<i class="far fa-circle"></i> Page ${i}: ${i===1?'Heart Wishes':i===2?'Photo Memory':'3D Cake'}`;
+                        }
+                    }
+                }
+
+                if (pageNum === 3) {
+                    if (!is3DInit) {
+                        init3DCake();
+                    }
+                    triggerConfettiBurst();
+                    if (!isAudioPlaying) startMusic();
+                }
+
+                showToast(`Switched to Page ${pageNum} ✨`);
+            }
+        }
+
+        function init3DCake() {
+            const container = document.getElementById('cakeCanvasContainer');
+            if (!container) return;
+
+            is3DInit = true;
+
+            // Scene setup
+            scene = new THREE.Scene();
+
+            // Camera setup
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 3.5, 7);
+
+            // Renderer setup
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            // Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxPolarAngle = Math.PI / 2.1;
+            controls.minDistance = 4;
+            controls.maxDistance = 10;
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xfff0f5, 0.7);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+            dirLight.position.set(5, 8, 5);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 1024;
+            dirLight.shadow.mapSize.height = 1024;
+            scene.add(dirLight);
+
+            const pointLight = new THREE.PointLight(0xffb6c1, 1, 10);
+            pointLight.position.set(-3, 4, -3);
+            scene.add(pointLight);
+
+            // Cake Group
+            const cakeGroup = new THREE.Group();
+            scene.add(cakeGroup);
+
+            // 1. Ceramic Plate
+            const plateGeo = new THREE.CylinderGeometry(2.6, 2.3, 0.15, 64);
+            const plateMat = new THREE.MeshStandardMaterial({
+                color: 0xf8fafc,
+                roughness: 0.1,
+                metalness: 0.1
+            });
+            const plate = new THREE.Mesh(plateGeo, plateMat);
+            plate.position.y = -0.8;
+            plate.receiveShadow = true;
+            cakeGroup.add(plate);
+
+            // 2. Lower Chocolate Tier
+            const lowerTierGeo = new THREE.CylinderGeometry(2.0, 2.0, 1.0, 64);
+            const lowerTierMat = new THREE.MeshStandardMaterial({
+                color: 0x3d150c,
+                roughness: 0.4,
+                metalness: 0.1
+            });
+            const lowerTier = new THREE.Mesh(lowerTierGeo, lowerTierMat);
+            lowerTier.position.y = -0.25;
+            lowerTier.castShadow = true;
+            lowerTier.receiveShadow = true;
+            cakeGroup.add(lowerTier);
+
+            // Lower Cream Fill Band
+            const fillGeo = new THREE.CylinderGeometry(2.02, 2.02, 0.1, 64);
+            const fillMat = new THREE.MeshStandardMaterial({ color: 0xffccd5, roughness: 0.3 });
+            const fillBand = new THREE.Mesh(fillGeo, fillMat);
+            fillBand.position.y = -0.25;
+            cakeGroup.add(fillBand);
+
+            // 3. Upper Strawberry Tier with Integrated Photo 24507_2.jpg
+            const upperTierGeo = new THREE.CylinderGeometry(1.4, 1.4, 0.9, 64);
+            const upperTierMat = new THREE.MeshStandardMaterial({
+                color: 0xc9184a,
+                roughness: 0.3,
+                metalness: 0.05
+            });
+            const upperTier = new THREE.Mesh(upperTierGeo, upperTierMat);
+            upperTier.position.y = 0.7;
+            upperTier.castShadow = true;
+            upperTier.receiveShadow = true;
+            cakeGroup.add(upperTier);
+
+            // Load photo 24507_2.jpg onto a frame plaque on front of cake
+            const textureLoader = new THREE.TextureLoader();
+            textureLoader.load('24507_2.jpg', (photoTex) => {
+                const plaqueGeo = new THREE.PlaneGeometry(0.9, 1.1);
+                const plaqueMat = new THREE.MeshBasicMaterial({ map: photoTex, side: THREE.DoubleSide });
+                const plaque = new THREE.Mesh(plaqueGeo, plaqueMat);
+                plaque.position.set(0, 0.7, 1.41);
+                
+                // Gold Frame Border around photo
+                const frameGeo = new THREE.BoxGeometry(0.98, 1.18, 0.03);
+                const frameMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.8, roughness: 0.2 });
+                const frame = new THREE.Mesh(frameGeo, frameMat);
+                frame.position.set(0, 0.7, 1.4);
+
+                cakeGroup.add(frame);
+                cakeGroup.add(plaque);
+            }, undefined, () => {
+                // Fallback texture if image load fails
+            });
+
+            // 4. Dripping Chocolate Glaze Top
+            const glazeGeo = new THREE.CylinderGeometry(1.42, 1.42, 0.15, 64);
+            const glazeMat = new THREE.MeshStandardMaterial({
+                color: 0x590d22,
+                roughness: 0.1,
+                metalness: 0.2
+            });
+            const glaze = new THREE.Mesh(glazeGeo, glazeMat);
+            glaze.position.y = 1.12;
+            cakeGroup.add(glaze);
+
+            // 5. Strawberries & Whipped Cream Swirls
+            for (let i = 0; i < 6; i++) {
+                const angle = (i / 6) * Math.PI * 2;
+                const r = 1.0;
+                const x = Math.cos(angle) * r;
+                const z = Math.sin(angle) * r;
+
+                // Cream swirl
+                const creamGeo = new THREE.SphereGeometry(0.18, 16, 16);
+                const creamMat = new THREE.MeshStandardMaterial({ color: 0xfff0f3, roughness: 0.2 });
+                const cream = new THREE.Mesh(creamGeo, creamMat);
+                cream.scale.set(1, 0.7, 1);
+                cream.position.set(x, 1.22, z);
+                cakeGroup.add(cream);
+
+                // Strawberry topping
+                const strawGeo = new THREE.ConeGeometry(0.12, 0.22, 16);
+                const strawMat = new THREE.MeshStandardMaterial({ color: 0xd90429, roughness: 0.3 });
+                const straw = new THREE.Mesh(strawGeo, strawMat);
+                straw.rotation.x = Math.PI;
+                straw.position.set(x, 1.34, z);
+                cakeGroup.add(straw);
+            }
+
+            // 6. 3D CANDLES WITH FLAME LIGHTS & PARTICLE SMOKE
+            const candlePositions = [
+                { x: -0.4, z: -0.2, col: 0xff4081 },
+                { x: 0.0, z: -0.4, col: 0xa855f7 },
+                { x: 0.4, z: -0.2, col: 0xeab308 }
+            ];
+
+            candlePositions.forEach((pos, idx) => {
+                const candleGroup = new THREE.Group();
+
+                // Stick
+                const stickGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.6, 16);
+                const stickMat = new THREE.MeshStandardMaterial({ color: pos.col, roughness: 0.3 });
+                const stick = new THREE.Mesh(stickGeo, stickMat);
+                stick.position.set(pos.x, 1.48, pos.z);
+                stick.castShadow = true;
+                candleGroup.add(stick);
+
+                // Wick
+                const wickGeo = new THREE.CylinderGeometry(0.008, 0.008, 0.1, 8);
+                const wickMat = new THREE.MeshBasicMaterial({ color: 0x1e293b });
+                const wick = new THREE.Mesh(wickGeo, wickMat);
+                wick.position.set(pos.x, 1.8, pos.z);
+                candleGroup.add(wick);
+
+                // Flame mesh
+                const flameGeo = new THREE.ConeGeometry(0.06, 0.18, 16);
+                const flameMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
+                const flame = new THREE.Mesh(flameGeo, flameMat);
+                flame.position.set(pos.x, 1.92, pos.z);
+
+                // Pointlight for flame glow
+                const flameLight = new THREE.PointLight(0xff7700, 1.5, 2);
+                flameLight.position.set(pos.x, 1.95, pos.z);
+
+                candleGroup.add(flame);
+                candleGroup.add(flameLight);
+
+                cakeGroup.add(candleGroup);
+
+                candleFlames.push({ flame, light: flameLight, initialY: 1.92 });
+            });
+
+            // Animation Loop
+            function animate() {
+                requestAnimationFrame(animate);
+
+                // Gentle cake rotation
+                cakeGroup.rotation.y += 0.003;
+
+                // Flicker candle flames
+                if (candlesLit) {
+                    candleFlames.forEach((cf, index) => {
+                        const flicker = Math.sin(Date.now() * 0.01 + index) * 0.02;
+                        cf.flame.scale.set(1 + flicker, 1 + flicker * 1.5, 1 + flicker);
+                        cf.light.intensity = 1.2 + Math.random() * 0.5;
+                    });
+                }
+
+                controls.update();
+                renderer.render(scene, camera);
+            }
+
+            animate();
+
+            // Handle Resize
+            window.addEventListener('resize', () => {
+                if (!container) return;
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+        }
+
+        function blowOut3DCandles() {
+            if (!candlesLit) return;
+
+            candlesLit = false;
+            candleFlames.forEach(cf => {
+                cf.flame.visible = false;
+                cf.light.intensity = 0;
+            });
+
+            playBlowSound();
+            document.getElementById('secretMessage').classList.remove('hidden');
+            triggerConfettiBurst();
+            showToast("✨ All 3D candles blown out! Wish granted! 🎂");
+        }
+
+        function relight3DCandles() {
+            candlesLit = true;
+            candleFlames.forEach(cf => {
+                cf.flame.visible = true;
+                cf.light.intensity = 1.5;
+            });
+
+            document.getElementById('secretMessage').classList.add('hidden');
+            showToast("Candles relit! 🔥");
+        }
+
+        function popBalloon(id) {
+            if (poppedBalloons.has(id)) {
+                showWishModal(id);
+                return;
+            }
+
+            const balloonEl = document.getElementById(`balloon${id}Container`);
+            if (!balloonEl) return;
+
+            playPopSound();
+            balloonEl.classList.add('popping');
+
+            const rect = balloonEl.getBoundingClientRect();
+            const x = (rect.left + rect.width / 2) / window.innerWidth;
+            const y = (rect.top + rect.height / 2) / window.innerHeight;
+            
+            confetti({
+                particleCount: 45,
+                spread: 70,
+                origin: { x, y },
+                colors: id === 1 ? ['#ff3b63', '#ff8da1'] : id === 2 ? ['#ff1493', '#ffb6c1'] : ['#9333ea', '#e879f9']
+            });
+
+            poppedBalloons.add(id);
+            document.getElementById('poppedCount').textContent = poppedBalloons.size;
+
+            setTimeout(() => {
+                balloonEl.style.visibility = 'hidden';
+                showWishModal(id);
+            }, 350);
+        }
+
+        function showWishModal(id) {
+            const data = wishes[id];
+            document.getElementById('modalWishTitle').textContent = data.title;
+            document.getElementById('modalWishText').textContent = data.text;
+            document.getElementById('modalIconBg').className = `w-16 h-16 rounded-full mx-auto flex items-center justify-center text-3xl mb-4 shadow-lg text-white ${data.colorBg}`;
+            document.getElementById('modalIconBg').textContent = data.icon;
+
+            openModal('wishModal');
+        }
+
+        function playPopSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(480, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.12);
+
+                gain.gain.setValueAtTime(0.5, ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.12);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start();
+                osc.stop(ctx.currentTime + 0.12);
+            } catch (e) { console.log(e); }
+        }
+
+        function playBlowSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const bufferSize = ctx.sampleRate * 0.25;
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                const noise = ctx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(300, ctx.currentTime);
+
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime(0.35, ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(ctx.destination);
+
+                noise.start();
+            } catch(e) { console.log(e); }
+        }
+
+        function toggleAudio() {
+            if (isAudioPlaying) {
+                stopMusic();
+            } else {
+                startMusic();
+            }
+        }
+
+        function startMusic() {
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                isAudioPlaying = true;
+                document.getElementById('musicIcon').className = "fas fa-volume-up text-green-400 animate-pulse";
+                document.getElementById('musicStateText').textContent = "ON";
+
+                const notes = [
+                    {f: 261.63, d: 0.3}, {f: 261.63, d: 0.3}, {f: 293.66, d: 0.6}, {f: 261.63, d: 0.6}, {f: 349.23, d: 0.6}, {f: 329.63, d: 1.0},
+                    {f: 261.63, d: 0.3}, {f: 261.63, d: 0.3}, {f: 293.66, d: 0.6}, {f: 261.63, d: 0.6}, {f: 392.00, d: 0.6}, {f: 349.23, d: 1.0},
+                    {f: 261.63, d: 0.3}, {f: 261.63, d: 0.3}, {f: 523.25, d: 0.6}, {f: 440.00, d: 0.6}, {f: 349.23, d: 0.6}, {f: 329.63, d: 0.6}, {f: 293.66, d: 1.0},
+                    {f: 466.16, d: 0.3}, {f: 466.16, d: 0.3}, {f: 440.00, d: 0.6}, {f: 349.23, d: 0.6}, {f: 392.00, d: 0.6}, {f: 349.23, d: 1.2}
+                ];
+                let step = 0;
+
+                function playNextNote() {
+                    if (!isAudioPlaying || !audioCtx) return;
+                    const note = notes[step];
+                    
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(note.f, audioCtx.currentTime);
+
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + note.d);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + note.d);
+
+                    step = (step + 1) % notes.length;
+                }
+
+                musicInterval = setInterval(playNextNote, 600);
+                showToast("🎵 Playing Happy Birthday Melody!");
+            } catch (e) { console.log(e); }
+        }
+
+        function stopMusic() {
+            isAudioPlaying = false;
+            if (musicInterval) clearInterval(musicInterval);
+            if (audioCtx) audioCtx.close();
+            document.getElementById('musicIcon').className = "fas fa-music text-pink-400";
+            document.getElementById('musicStateText').textContent = "OFF";
+            showToast("🔇 Music Paused");
+        }
+
+        function triggerConfettiBurst() {
+            confetti({
+                particleCount: 120,
+                spread: 85,
+                origin: { y: 0.6 },
+                colors: ['#ff3b63', '#ff1493', '#9333ea', '#fbbf24', '#38bdf8']
+            });
+        }
+
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.children[0].classList.remove('scale-90');
+                modal.children[0].classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.add('opacity-0');
+            modal.children[0].classList.remove('scale-100');
+            modal.children[0].classList.add('scale-90');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function saveCustomizations() {
+            const name = document.getElementById('inputName').value.trim();
+            const quote = document.getElementById('inputQuote').value.trim();
+
+            if (name) {
+                document.getElementById('displayName').textContent = name;
+            }
+            if (quote) {
+                document.getElementById('polaroidQuote').textContent = `"${quote}"`;
+            }
+
+            closeModal('customModal');
+            showToast("✨ Customization saved successfully!");
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2800);
+        }
+    </script>
+</body>
+</html>
